@@ -1,0 +1,124 @@
+// СРС, Неделя 2 — Доставка еды
+// После применения migrations/02_schema.sql
+Project food_delivery {
+  database_type: "PostgreSQL"
+}
+
+Table restaurant [note: 'Ресторан'] {
+  restaurant_id bigint [pk, increment]
+  name text [not null]
+  address text [not null]
+  phone text
+  rating numeric(2,1)
+  created_at timestamptz [not null]
+}
+
+Table customer [note: 'Клиент'] {
+  customer_id bigint [pk, increment]
+  full_name text [not null]
+  phone text [not null, unique]
+  email text [unique]
+  address text [not null]
+  created_at timestamptz [not null]
+}
+
+Table courier [note: 'Курьер'] {
+  courier_id bigint [pk, increment]
+  full_name text [not null]
+  phone text [not null, unique]
+  transport_type text [not null]
+  rating numeric(2,1)
+  hire_date date [not null]
+  created_at timestamptz [not null]
+}
+
+Table category [note: 'Категория'] {
+  category_id bigint [pk, increment]
+  name text [not null, unique]
+  description text
+}
+
+Table dish [note: 'Блюдо'] {
+  dish_id bigint [pk, increment]
+  restaurant_id bigint [not null]
+  name text [not null]
+  description text
+  price numeric(10,2) [not null]
+  is_available boolean [not null, default: true]
+  created_at timestamptz [not null]
+}
+
+Table orders [note: 'Заказ'] {
+  order_id bigint [pk, increment]
+  customer_id bigint [not null]
+  restaurant_id bigint [not null]
+  status text [not null]
+  delivery_fee numeric(8,2) [not null, default: 500]
+  total_amount numeric(10,2) [not null]
+  comment text
+  created_at timestamptz [not null]
+}
+
+Table dish_category [note: 'Категории блюда (M:N)'] {
+  dish_id bigint [not null]
+  category_id bigint [not null]
+  is_primary boolean [not null, default: false]
+
+  indexes {
+    (dish_id, category_id) [pk]
+  }
+}
+
+Table order_item [note: 'ФАКТ: 300 000 строк к неделе 4'] {
+  order_item_id bigint [pk, increment]
+  order_id bigint [not null]
+  dish_id bigint [not null]
+  quantity integer [not null]
+  unit_price numeric(10,2) [not null]
+
+  indexes {
+    (order_id, dish_id) [unique]
+  }
+}
+
+Table payment [note: 'Оплата'] {
+  payment_id bigint [pk, increment]
+  order_id bigint [not null, unique]
+  payment_method text [not null]
+  payment_status text [not null]
+  amount numeric(10,2) [not null]
+  paid_at timestamptz
+  created_at timestamptz [not null]
+}
+
+Table delivery [note: 'Доставка'] {
+  delivery_id bigint [pk, increment]
+  order_id bigint [not null, unique]
+  courier_id bigint [not null]
+  delivery_address text [not null]
+  status text [not null]
+  picked_up_at timestamptz
+  delivered_at timestamptz
+  created_at timestamptz [not null]
+}
+
+Table review [note: 'Отзыв'] {
+  review_id bigint [pk, increment]
+  order_id bigint [not null, unique]
+  rating smallint [not null]
+  comment text [not null]
+  created_at timestamptz [not null]
+}
+
+// < one-to-many; - one-to-one (one order can have zero or one child record)
+Ref: restaurant.restaurant_id < dish.restaurant_id
+Ref: restaurant.restaurant_id < orders.restaurant_id
+Ref: customer.customer_id < orders.customer_id
+Ref: dish.dish_id < dish_category.dish_id
+Ref: category.category_id < dish_category.category_id
+Ref: orders.order_id < order_item.order_id
+Ref: dish.dish_id < order_item.dish_id
+Ref: orders.order_id - payment.order_id
+Ref: orders.order_id - delivery.order_id
+Ref: courier.courier_id < delivery.courier_id
+Ref: orders.order_id - review.order_id

@@ -58,3 +58,27 @@
 
 \- migrations/01\_init.sql — SQL-файл для создания структуры базы данных
 
+
+## Неделя 2 — СРС (ER-модель и 3НФ)
+
+Продолжение собственного проекта «Доставка еды» (не СРСП по транспорту).
+
+- `migrations/02_schema.sql` — вся итоговая структура таблиц с `COMMENT ON`, обновление старой схемы;
+- `reports/week02.md` — объяснение двух M:N связей, нормализации и таблицы-факта;
+- `diagrams/food_delivery.png` — ER-диаграмма;
+- `diagrams/food_delivery.dbml` — редактируемый исходник для https://dbdiagram.io/;
+- `diagrams/food_delivery.dot` и `diagrams/food_delivery.svg` — дополнительные исходник и векторное изображение.
+
+### Как применить к базе, созданной в неделю 1
+
+1. Сделайте резервную копию базы (свой `food_delivery_full.sql` уже сохранён).
+2. Откройте CMD в папке проекта `sakenuly-db`.
+3. Выполните:
+
+   ```cmd
+   "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U food_app -d food_delivery -v ON_ERROR_STOP=1 -f "migrations\02_schema.sql"
+   ```
+
+4. Проверьте в `psql`: `\d food_delivery.dish_category` и `\d food_delivery.review`.
+
+**Важно:** не запускать заново `01_init.sql` или `02_seed.sql` на уже заполненной базе. Если собираете базу по старым файлам с нуля, порядок: `01_init.sql`, затем `02_seed.sql`, затем `02_schema.sql`. Новый файл также может создать пустую структуру сразу, но старый файл наполнения `02_seed.sql` рассчитан на схему первой недели и должен выполняться **до** нормализующей миграции.
